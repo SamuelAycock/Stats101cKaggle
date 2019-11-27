@@ -1,6 +1,6 @@
 ---
 title: "Kaggle Project"
-author: "Samuel Aycock and Kenrick Brayman"
+author: "Samuel Aycock and Kendrick Brayman"
 date: "November 21, 2019"
 output: pdf_document
 ---
@@ -17,16 +17,15 @@ library(glmnet)
 library(leaps)
 library(caret)
 data  <- read.csv("basketball.csv")
-#head(data)
+head(data)
 ```
 
 ```{r}
-attach(data)
 names(data)
 ```
 ```{r}
 #Split the data
-set.seed(100)
+set.seed(200)
 train <- sample(1:dim(data)[1], dim(data)[1]/2)
 test <- -train
 data_train<- data[train, ]
@@ -41,22 +40,34 @@ anova(m1)
 ```
 
 ```{r}
-#Test the predictions.
-#Pred <- predict(m1, data_test)
-#glm_pred <- rep("No",4760)
-#glm_pred[glm_probs >.5] <- "Yes"
-#table(glm_pred,data_test$HTWins)
-#mean(glm_pred == data_test$HTWins)
-
+#Model
 M1 <- train(HTWins ~ HT.OTA.ast + VT.OTA.pts + VT.TS.fgm  + HT.TA.pf + HT.OTS.fga + HT.OTS.tpm + HT.OTS.tpa + VT.TA.blk + HT.S3.ast  + HT.S4.plmin + HT.S4.pts + HT.S4.min + HT.S5.plmin + HT.S5.pts + HT.S5.min + HT.OTS.fta + HT.OTS.dreb + HT.OTS.ast + HT.OTS.stl + HT.OTS.to + HT.OTS.pts, method = "glm",data = data)
-M1
 
 #confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
 ```
 
+```{r}
+#Test the model with the split training data first.
+Wins <- factor(c("Yes","No"))
+Winpreds <- predict(m1,newdata = data_test,"response")
+HTWinspred <- rep(Wins[2], dim(testing)[1])
+HTWinspred[Winpreds > .5] <- Wins[1]
+confusionmat <- table(HTWinspred, data_test$HTWins)
+Accuracy <- (confusionmat[1] + confusionmat[4])/sum(confusionmat)
+print(Accuracy)
+```
 
+```{r}
+#Now test the model on the test data.
+testing <- read.csv("basketballtest.csv")
 
+Winpreds <- predict(m1,newdata = testing,"response")
+HTWins <- rep(Wins[2], dim(testing)[1])
+HTWins[Winpreds > .5] <- Wins[1]
 
+#Save the predictions.
+Upload <- data.frame("id" = testing$id,HTWins)
+write.csv(Upload,'C:/Users/sama2/OneDrive/Documents/Upload.csv',row.names = FALSE)
 
 
 
