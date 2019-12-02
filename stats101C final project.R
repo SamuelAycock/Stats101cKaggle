@@ -26,3 +26,14 @@ model2 <- glm(y~VT.TA.pts+VT.TS.pts,data=x)
 
 createsol("subimssion2.csv",model2)
 
+#submission3 accuracy ~0.58
+out <-ifelse((test$VT.TS.pts - test$VT.TA.pts) > 0,"No","Yes")
+out <- cbind(test$id,out)
+colnames(out) <- c('id','HTWins')
+write.csv(out,"submission3.csv",row.names = F)
+
+#submission4 accuracy ~0.58
+out <-ifelse(((test$VT.TS.fgm*2 + test$VT.TS.tpm*3) - (test$HT.TS.tpm * 3 + test$HT.TS.fgm * 2)) > 0,"No","Yes")
+out <- cbind(test$id,out)
+colnames(out) <- c('id','HTWins')
+write.csv(out,"submission4.csv",row.names = F)
