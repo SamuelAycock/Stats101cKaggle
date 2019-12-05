@@ -15,6 +15,9 @@ knitr::opts_chunk$set(echo = TRUE)
 library(glmnet)
 library(leaps)
 library(caret)
+library(MASS)
+library(splines)
+library(gam)
 data  <- read.csv("basketball.csv")
 head(data)
 ```
@@ -64,21 +67,6 @@ data_test <- data[test, ]
 ```
 
 ```{r}
-#Model the data.
-m1 <- glm(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast, family = "binomial",data = data_train)
-summary(m1)
-anova(m1)
-```
-
-```{r}
-#Model
-M1 <- train(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast, method = "glm",data = data)
-
-summary(M1)
-#confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
-```
-
-```{r}
 #Lasso
 training <- model.matrix(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast , data = data_train)
 
@@ -104,6 +92,54 @@ TestMSE2 <- mean((ridge - data_test$HTWins)^2)
 
 
 ```{r}
+#Regsubsets
+HTdata <- data[,c(3,115:217)]
+dataset_part <- sample(1:3, nrow(HTdata), replace = T, prob = c(0.5, 0.25, 0.25))
+
+p <- ncol(HTdata) - 1
+reg1 <- regsubsets(HTWins ~ ., data = HTdata[dataset_part == 1, ], nvmax = p, method = "forward")
+reg2 <- regsubsets(HTWins ~ ., data = HTdata[dataset_part == 1, ], nvmax = p, method = "backward")
+#print(summary(reg))
+
+coefi <- coef(reg1, id = 30)
+names(coefi)
+
+coefi <- coef(reg2, id = 30)
+names(coefi)
+```
+
+```{r}
+#Model the data.
+m1 <- glm(HTWins ~ HT.TS.tpm  +  HT.TS.tpa  +  HT.TS.stl  +  HT.TS.blk  +  HT.TS.pts  +  HT.TA.oreb +  HT.TA.dreb +  HT.TA.ast  + HT.TA.pts +   HT.OTS.tpa  + HT.OTA.dreb + HT.OTA.ast  + HT.S1.plmin + HT.S1.pts   + HT.S1.ast +   HT.S2.min + HT.S2.ast + HT.S3.plmin + HT.S3.pts + HT.S3.ast + HT.S4.pts +   HT.S4.ast +   HT.OS1.plmin + HT.OS1.fgm +  HT.OS2.fgm +  HT.OS3.plmin + HT.OS3.dreb +  HT.OS3.to  +  HT.OS3.oreb  + HT.OS4.plmin, family = "binomial",data = data_train)
+summary(m1)
+anova(m1)
+```
+
+```{r}
+#Model
+M1 <- train(HTWins ~ HT.TS.tpm  +  HT.TS.tpa  +  HT.TS.stl  +  HT.TS.blk  +  HT.TS.pts  +  HT.TA.oreb +  HT.TA.dreb +  HT.TA.ast  + HT.TA.pts +   HT.OTS.tpa  + HT.OTA.dreb + HT.OTA.ast  + HT.S1.plmin + HT.S1.pts   + HT.S1.ast +   HT.S2.min + HT.S2.ast + HT.S3.plmin + HT.S3.pts + HT.S3.ast + HT.S4.pts +   HT.S4.ast +   HT.OS1.plmin + HT.OS1.fgm +  HT.OS2.fgm +  HT.OS3.plmin + HT.OS3.dreb +  HT.OS3.to  +  HT.OS3.oreb  + HT.OS4.plmin, method = "glm",data = data)
+
+summary(M1)
+#confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
+```
+
+```{r}
+#Model the data.
+m2 <- glm(HTWins ~ HT.TS.tpm  +  HT.TS.stl  +  HT.TS.blk  +  HT.TS.pts  +  HT.TA.oreb +  HT.TA.ast  +  HT.TA.pts  +  HT.OTS.fga + HT.OTS.tpm  + HT.OTS.tpa  + HT.OTS.fta  + HT.OTS.pts  + HT.OTA.pts  + HT.S1.plmin + HT.S1.pts + HT.S1.ast   + HT.S2.min + HT.S2.ast + HT.S3.ast   + HT.S4.pts + HT.S4.ast +   HT.OS1.plmin + HT.OS1.dreb  + HT.OS1.fgm  + HT.OS2.oreb +  HT.OS3.dreb + HT.OS3.to  +  HT.OS4.oreb  + HT.OS5.fgm  + HT.OS5.oreb, family = "binomial",data = data_train)
+summary(m1)
+anova(m1)
+```
+
+```{r}
+#Model
+M2 <- train(HTWins ~ HT.TS.tpm  +  HT.TS.stl  +  HT.TS.blk  +  HT.TS.pts  +  HT.TA.oreb +  HT.TA.ast  +  HT.TA.pts  +  HT.OTS.fga + HT.OTS.tpm  + HT.OTS.tpa  + HT.OTS.fta  + HT.OTS.pts  + HT.OTA.pts  + HT.S1.plmin + HT.S1.pts + HT.S1.ast   + HT.S2.min + HT.S2.ast + HT.S3.ast   + HT.S4.pts + HT.S4.ast +   HT.OS1.plmin + HT.OS1.dreb  + HT.OS1.fgm  + HT.OS2.oreb +  HT.OS3.dreb + HT.OS3.to  +  HT.OS4.oreb  + HT.OS5.fgm  + HT.OS5.oreb, method = "glm",data = data)
+
+summary(M1)
+#confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
+```
+
+
+```{r}
 #Test the model with the split training data first.
 Wins <- factor(c("Yes","No"))
 Winpreds <- predict(m1,newdata = data_test,"response")
@@ -113,6 +149,7 @@ confusionmat <- table(HTWinspred, data_test$HTWins)
 Accuracy <- (confusionmat[1] + confusionmat[4])/sum(confusionmat)
 print(Accuracy)
 ```
+
 
 ```{r}
 #Now test the model on the test data.
@@ -124,10 +161,8 @@ HTWins[Winpreds > .5] <- Wins[1]
 
 #Save the predictions.
 Upload <- data.frame("id" = testing$id,HTWins)
-write.csv(Upload,'C:/Users/sama2/OneDrive/Documents/Upload2.csv',row.names = FALSE)
-
-
-
+write.csv(Upload,'C:/Users/sama2/OneDrive/Documents/Upload3.csv',row.names = FALSE)
+```
 
 
 
