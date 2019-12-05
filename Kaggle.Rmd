@@ -43,7 +43,7 @@ anova(m1)
 #Model
 M1 <- train(HTWins ~ HT.OTA.ast + VT.OTA.pts + VT.TS.fgm  + HT.TA.pf + HT.OTS.fga + HT.OTS.tpm + HT.OTS.tpa + VT.TA.blk + HT.S3.ast  + HT.S4.plmin + HT.S4.pts + HT.S4.min + HT.S5.plmin + HT.S5.pts + HT.S5.min + HT.OTS.fta + HT.OTS.dreb + HT.OTS.ast + HT.OTS.stl + HT.OTS.to + HT.OTS.pts, method = "glm",data = data)
 
-#confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
+#confusionMatrix(table(predict(M1)),data_train$HTWins == "Yes")
 ```
 
 ```{r}
