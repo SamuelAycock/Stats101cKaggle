@@ -12,7 +12,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #Read the data.
-library(ISLR)
 library(glmnet)
 library(leaps)
 library(caret)
@@ -21,8 +20,40 @@ head(data)
 ```
 
 ```{r}
-names(data)
+# Visting Team corr (1).
+DF <- data[,c(3,4:80)]
+DF[] <- lapply(DF,as.integer)
+cor(DF)[,1][c(order(cor(DF)[,1]))]
 ```
+
+```{r}
+# Visiting team corr (2).
+DF <- data[,c(3,81:112)]
+DF[] <- lapply(DF,as.integer)
+cor(DF)[,1][c(order(cor(DF)[,1]))]
+```
+
+```{r}
+# Home team corr (1).
+DF <- data[,c(3,115:180)]
+DF[] <- lapply(DF,as.integer)
+cor(DF)[,1][c(order(cor(DF)[,1]))]
+```
+
+```{r}
+# Home team corr (2).
+DF <- data[,c(3,181:205)]
+DF[] <- lapply(DF,as.integer)
+cor(DF)[,1][c(order(cor(DF)[,1]))]
+```
+
+```{r}
+# Home team corr (3).
+DF <- data[,c(3,206:216)]
+DF[] <- lapply(DF,as.integer)
+cor(DF)[,1][c(order(cor(DF)[,1]))]
+```
+
 ```{r}
 #Split the data
 set.seed(200)
@@ -34,17 +65,43 @@ data_test <- data[test, ]
 
 ```{r}
 #Model the data.
-m1 <- glm(HTWins ~ HT.OTA.ast + VT.OTA.pts + VT.TS.fgm  + HT.TA.pf + HT.OTS.fga + HT.OTS.tpm + HT.OTS.tpa + VT.TA.blk + HT.S3.ast  + HT.S4.plmin + HT.S4.pts + HT.S4.min + HT.S5.plmin + HT.S5.pts + HT.S5.min + HT.OTS.fta + HT.OTS.dreb + HT.OTS.ast + HT.OTS.stl + HT.OTS.to + HT.OTS.pts, family = "binomial",data = data_train)
+m1 <- glm(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast, family = "binomial",data = data_train)
 summary(m1)
 anova(m1)
 ```
 
 ```{r}
 #Model
-M1 <- train(HTWins ~ HT.OTA.ast + VT.OTA.pts + VT.TS.fgm  + HT.TA.pf + HT.OTS.fga + HT.OTS.tpm + HT.OTS.tpa + VT.TA.blk + HT.S3.ast  + HT.S4.plmin + HT.S4.pts + HT.S4.min + HT.S5.plmin + HT.S5.pts + HT.S5.min + HT.OTS.fta + HT.OTS.dreb + HT.OTS.ast + HT.OTS.stl + HT.OTS.to + HT.OTS.pts, method = "glm",data = data)
+M1 <- train(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast, method = "glm",data = data)
 
-#confusionMatrix(table(predict(M1)),data_train$HTWins == "Yes")
+summary(M1)
+#confusionMatrix(table(predict(M1)), data_train$HTWins == "Yes")
 ```
+
+```{r}
+#Lasso
+training <- model.matrix(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast , data = data_train)
+
+testing <- model.matrix(HTWins ~ HT.OS4.plmin + HT.OS5.plmin + HT.S5.plmin + HT.S4.plmin + HT.OS1.plmin + HT.OS3.plmin + HT.OS2.plmin + HT.TA.ast + HT.TA.pts + HT.TA.fgm + HT.OTS.pts + HT.OTS.ast + HT.TA.dreb + HT.OTS.dreb + HT.OTA.pts + HT.TS.pts + HT.OTA.ast + HT.S2.plmin + HT.S3.plmin + HT.S1.plmin + HT.TS.dreb + HT.OTA.fgm + HT.S1.pts + HT.TS.ast, data = data_test)
+
+grid <- 10^seq(8, -2, length = 100)
+fit2 <- glmnet(training, data_train$HTWins, alpha = 1, lambda = grid , thresh = 1e-12,family = "binomial")
+cv2 <- cv.glmnet(training, data_train$HTWins, alpha = 1, lambda = grid, thresh = 1e-12,family = "binomial")
+lambda2 <- cv2$lambda.min
+lasso <- predict(fit2, s = lambda2, newx = testing)
+TestMSE3 <- mean((lasso - data_test$HTWins)^2)
+predict(fit2, s = lambda2, type = "coefficients")
+```
+
+```{r}
+#Ridge
+fit <- glmnet(training, data_train$HTWins, alpha = 0, lambda = grid, thresh = 1e-12, family = "binomial")
+cv <- cv.glmnet(training, data_train$HTWins, alpha = 0, lambda = grid, thresh = 1e-12, family = "binomial")
+lambda <- cv$lambda.min
+ridge <- predict(fit, s = lambda, newx = testing)
+TestMSE2 <- mean((ridge - data_test$HTWins)^2)
+```
+
 
 ```{r}
 #Test the model with the split training data first.
@@ -67,9 +124,7 @@ HTWins[Winpreds > .5] <- Wins[1]
 
 #Save the predictions.
 Upload <- data.frame("id" = testing$id,HTWins)
-write.csv(Upload,'C:/Users/sama2/OneDrive/Documents/Upload.csv',row.names = FALSE)
-
-
+write.csv(Upload,'C:/Users/sama2/OneDrive/Documents/Upload2.csv',row.names = FALSE)
 
 
 
