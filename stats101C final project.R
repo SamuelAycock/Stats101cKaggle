@@ -5,7 +5,7 @@ y <- training$HTWins
 y <- ifelse(y == "Yes",T,F)
 
 x <- training[,-c(1,2,3,4,5,6,8,which(duplicated(t(training[1,]))))]
-testx <- test[,-c(1:7,which(duplicated(t(training[1,]))))]
+testx <- test[,-c(1:7,which(duplicated(t(test[1,]))))]
 createsol <- function(name,model){
   probs <- predict(model,newdata = test)
   answers <- cbind(test[,1],ifelse(probs > 0.5,"Yes","No"))
@@ -39,9 +39,9 @@ colnames(out) <- c('id','HTWins')
 write.csv(out,"submission4.csv",row.names = F)
 
 #bigSTDmat
-big <- rbind(matrix(x),matrix(testx))
-
-bigstd <- big %>% apply(2,function(x){(x - mean(x))/sd(x)})
+big <- as.matrix(rbind(matrix(x),matrix(testx)))
+library(tidyr)
+std <- x %>% apply(2,function(x){(x - mean(x))/sd(x)})
 
 trainSTD <- bigstd[1:9520,]
 testSTD <- bigstd[-c(1:9520),]
@@ -83,7 +83,7 @@ answers <- cbind(test[,1],ifelse(probs > 0.5,"Yes","No"))
 colnames(answers) <- c("id","HTWins")
 write.csv(answers,"submission6.csv",row.names = F)
 
-#submission 8 PCA then Knn NOT SUBMITTED
+#submission 8 PCA then Knn 0.5
 
 trainPC <- prcomp(big[1:9520,],center = T,scale = T)
 probs <- predict(trainPC,newdata = big[-c(1:9520),])
@@ -92,6 +92,30 @@ ans <- knn(trainPC$x,probs,y)
 answers <- cbind(test[,1],ifelse(as.logical(ans),"Yes","No"))
 colnames(answers) <- c("id","HTWins")
 write.csv(answers,"submission8.csv",row.names = F)
+
+#submission 9
+library(caret)
+ind <- sample(1:9520,size = 1000,replace = F)
+train <- data.frame(y = as.factor(y),x)
+tetsting <- x[ind,]
+
+fitcontrol <- trainControl(method = "repeatedcv",number = 10,repeats = 10)
+mod9 <- train(y~.,data = train,method = 'knn')
+
+#submission10 boosted classification trees (LONG COMP TIME) acc 0.66
+mod10 <- train(y~.,data = train,method = 'ada')
+ans <- cbind(test[,1],ifelse(ans == "TRUE","Yes","No"))
+colnames(ans) <- c("id","HTWins")
+write.csv(ans,"submission10.csv",row.names = F)
+
+#submission11 ORFlog NOT SUBMITTED
+
+mod11 <- train(y~.,data = train,method = 'ORFlog')
+ans <- predict(mod11,newdata = testx)
+ans <- cbind(test[,1],ifelse(ans == "TRUE","Yes","No"))
+colnames(ans) <- c("id","HTWins")
+write.csv(ans,"submission11.csv",row.names = F)
+
 
 #winrates
 
