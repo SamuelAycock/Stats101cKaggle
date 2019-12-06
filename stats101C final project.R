@@ -116,6 +116,12 @@ ans <- cbind(test[,1],ifelse(ans == "TRUE","Yes","No"))
 colnames(ans) <- c("id","HTWins")
 write.csv(ans,"submission11.csv",row.names = F)
 
+#submission12 deepboost classification NOT SUBIMTTED
+mod12 <- train(y~.,data = train,method = 'deepboost')
+ans <- predict(mod11,newdata = testx)
+ans <- cbind(test[,1],ifelse(ans == "TRUE","Yes","No"))
+colnames(ans) <- c("id","HTWins")
+write.csv(ans,"submission12.csv",row.names = F)
 
 #winrates
 
