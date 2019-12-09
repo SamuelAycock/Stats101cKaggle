@@ -11,7 +11,7 @@ output: html_document
 ```{r}
 library(tidyr)
 library(leaps)
-
+set.seed(1)
 createsol <- function(name,model){
   probs <- predict(model,newdata = test)
   answers <- cbind(test[,1],ifelse(probs > 0.5,"Yes","No"))
