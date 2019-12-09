@@ -1,0 +1,50 @@
+---
+title: "Stats 101C Final Project"
+author: "Kendrick Brayman 004787864"
+date: "December 8, 2019"
+output: html_document
+---
+
+####data maniplulation/prediction creation
+
+
+```{r}
+library(tidyr)
+library(leaps)
+
+createsol <- function(name,model){
+  probs <- predict(model,newdata = test)
+  answers <- cbind(test[,1],ifelse(probs > 0.5,"Yes","No"))
+  colnames(answers) <- c("id","HTWins")
+  write.csv(answers,name,row.names = F)
+}
+
+
+training <- read.csv('train.csv')
+test <- read.csv('test.csv')
+
+y <- training$HTWins
+y <- ifelse(y == "Yes",T,F)
+
+x <- training[,-c(1,2,3,4,5,6,8,which(duplicated(t(training[1,]))))]
+testx <- test[,-c(1:7,which(duplicated(t(test[1,]))))]
+
+stdx <- minx %>% apply(2,function(xi){(xi - mean(xi))/sd(xi)})
+stdtest <- minxtest %>% apply(2,function(xi){(xi - mean(xi))/sd(xi)})
+
+model <- regsubsets(y~ ., data = x, nvmax = 100, method = "forward")
+modelSum <- summary(reg1)
+models <- a$which[20,-1]
+predictors <- names(which(models == TRUE))
+predictors <- paste(predictors, collapse = "+")
+form <- as.formula(paste0('y', "~", predictors))
+modeltest <- lm(form,data = x)
+createsol("Submission.csv",modeltest)
+```
+
+####plots for report
+
+```{r}
+plot(modelSum$bic)
+```
+
